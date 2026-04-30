@@ -21,7 +21,7 @@ Next, install a PyTorch3D version that matches both your Python and CUDA version
 - `cpXXX` → Python version (e.g., `cp313` = Python 3.13)
 
 Download the wheel that matches your setup and install it as described here:  
-[torch_packages_builder GitHub](https://github.com/MiroPsota/torch_packages_builder)
+[torch_packages_builder GitHub](https://github.com/MiroPsota/torch_packages_builder).
 
 In this project, we use Python 3.13.0 and CUDA 12.8 (tested on an NVIDIA RTX PRO 6000 Blackwell Workstation Edition GPU):
 
