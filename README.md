@@ -6,17 +6,32 @@ This repository contains a pipeline for preprocessing, segmentation, and mesh re
 
 ## 1. Installation
 
-Install dependencies:
+### 1.1 Pytorch3d
 
-```bash
-pip install pytorch3d
+Installing PyTorch3D can be tricky due to strict compatibility requirements between Python, CUDA, and PyTorch.
+
+First, choose a CUDA version compatible with your GPU. Then install a matching PyTorch build for that CUDA version.
+
+Next, install a PyTorch3D version that matches both your Python and CUDA versions. Precompiled wheels are available here:
+https://miropsota.github.io/torch_packages_builder/pytorch3d/. More info can be found here: https://github.com/MiroPsota/torch_packages_builder
+
+Naming convention:
+
+cuXXX → CUDA version (e.g., cu128 = CUDA 12.8)
+cpXXX → Python version (e.g., cp313 = Python 3.13)
+
+Download the wheel that matches your setup and install it locally.
+
+In this project, we use Python 3.13.0 and CUDA 12.8 (tested on an NVIDIA RTX PRO 6000 Blackwell Workstation Edition GPU):
+
+```
+conda create -n pyt3d python=3.13.0
+conda activate pyt3d
+pip install torch==2.7.0 torchvision==0.22.0 torchaudio==2.7.0 --index-url https://download.pytorch.org/whl/cu128
+pip install --extra-index-url https://miropsota.github.io/torch_packages_builder pytorch3d-0.7.9+pt2.7.0cu128-cp313-cp313-linux_x86_64.whl
 ```
 
-Make sure you also have all required dependencies for:
-- TotalSegmentator
-- nibabel
-- numpy
-- scipy
+### 1.2 Other dependencies
 
 ---
 
