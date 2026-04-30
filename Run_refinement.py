@@ -22,10 +22,9 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import os
 import numpy as np
-import tools as tools
+import saros_utils as utils
 import SimpleITK as sitk
-import processing_tools as pt
-from my_functions import *
+from saros_utils import *
 import vtk
 from scipy.interpolate import RegularGridInterpolator
 import torch
@@ -36,7 +35,6 @@ from tqdm import tqdm
 import traceback
 import edt
 
-from my_functions import *
 
 
 device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
@@ -95,9 +93,9 @@ for series in tqdm(all_series):
 
     # if not os.path.exists(mesh_smoothed_path_obj):
     
-    pt.convert_label_map_to_surface_file(TS_trunkcavities_path, mesh_path, segment_id=3)
+    utils.convert_label_map_to_surface_file(TS_trunkcavities_path, mesh_path, segment_id=3)
     decimate_and_smooth_ALOT(mesh_path, mesh_smoothed_path)
-    tools.convert_vtk_to_obj(mesh_smoothed_path, mesh_smoothed_path_obj)
+    utils.convert_vtk_to_obj(mesh_smoothed_path, mesh_smoothed_path_obj)
 
 
     # Load the smoothed mesh

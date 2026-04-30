@@ -62,7 +62,7 @@ saros_dataset/
 ### 4.1 Organise dataset
 
 ```bash
-python organise_saros_files.py
+python prepare_saros_data.py --mode organize
 ```
 
 This script:
@@ -76,7 +76,13 @@ This script:
 ### 4.2 Reorientation
 
 ```bash
-python reorient_everything_parallel.py
+python prepare_saros_data.py --mode reorient
+```
+
+To run both steps in one go:
+
+```bash
+python prepare_saros_data.py --mode both
 ```
 
 This script:
@@ -102,13 +108,13 @@ This performs the actual 3D mesh refinement using the preprocessed SAROS data.
 ### 6.1 Compute metrics
 
 ```bash
-python calculate_metrics_saros.py
+python metrics_saros.py calculate
 ```
 
 ### 6.2 Summarise results
 
 ```bash
-python summarise_metrics.py
+python metrics_saros.py summarize --csv-path /data/awias/periseg/saros/TS_pericardium/pytorch3d/metrics/best_grid_search_result_EXCLUDEGRID_EAT0/metrics_summary_taubin.csv
 ```
 
 This generates aggregated performance metrics across the dataset.
