@@ -60,7 +60,7 @@ saros_dataset/
 ## 4. Preprocessing Pipeline
 
 ```bash
-python prepare_saros_data.py --mode organize
+python prepare_saros_data.py
 ```
 
 This script:
