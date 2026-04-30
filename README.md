@@ -13,15 +13,15 @@ Installing PyTorch3D can be tricky due to strict compatibility requirements betw
 First, choose a CUDA version compatible with your GPU. Then install a matching PyTorch build for that CUDA version by following the guide in [Pytorch](https://pytorch.org/).
 
 Next, install a PyTorch3D version that matches both your Python and CUDA versions. Precompiled wheels are available here:
-[PyTorch3D wheels](https://miropsota.github.io/torch_packages_builder/pytorch3d/)
-. More info can be found here: [torch_packages_builder GitHub](https://github.com/MiroPsota/torch_packages_builder)
+[PyTorch3D wheels](https://miropsota.github.io/torch_packages_builder/pytorch3d/).
 
-Naming convention:
+### Naming convention
 
-cuXXX → CUDA version (e.g., cu128 = CUDA 12.8)
-cpXXX → Python version (e.g., cp313 = Python 3.13)
+- `cuXXX` → CUDA version (e.g., `cu128` = CUDA 12.8)  
+- `cpXXX` → Python version (e.g., `cp313` = Python 3.13)
 
-Download the wheel that matches your setup and install it locally.
+Download the wheel that matches your setup and install it as described here:  
+[torch_packages_builder GitHub](https://github.com/MiroPsota/torch_packages_builder)
 
 In this project, we use Python 3.13.0 and CUDA 12.8 (tested on an NVIDIA RTX PRO 6000 Blackwell Workstation Edition GPU):
 
