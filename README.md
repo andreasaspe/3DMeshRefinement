@@ -41,6 +41,7 @@ Place the outputs into the corresponding case folders inside the SAROS dataset d
 
 After processing, the dataset structure should look like:
 
+```
 saros_dataset/
 ├── case_000/
 │   ├── image.nii.gz
@@ -52,6 +53,7 @@ saros_dataset/
 │   ├── case_000_trunkcavities.nii.gz
 ├── case_001/
 ├── ...
+```
 
 ---
 
