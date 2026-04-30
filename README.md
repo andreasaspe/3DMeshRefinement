@@ -59,8 +59,6 @@ saros_dataset/
 
 ## 4. Preprocessing Pipeline
 
-### 4.1 Organise dataset
-
 ```bash
 python prepare_saros_data.py --mode organize
 ```
@@ -70,26 +68,8 @@ This script:
 - Keeps only scans where the heart is visible
 - Crops volumes accordingly
 - Renames and reorganises files into a clean structure
-
----
-
-### 4.2 Reorientation
-
-```bash
-python prepare_saros_data.py --mode reorient
-```
-
-To run both steps in one go:
-
-```bash
-python prepare_saros_data.py --mode both
-```
-
-This script:
 - Reorients all volumes to the LPS (Left-Posterior-Superior) coordinate system
-- Runs processing in parallel for efficiency
 
----
 
 ## 5. Mesh Refinement
 
