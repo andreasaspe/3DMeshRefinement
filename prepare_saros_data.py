@@ -31,7 +31,6 @@ def _process_subject(subject, src_path, dst_path, margin_mm):
     except Exception:
         return None
 
-    # Align metadata
     for img in [trunk_sitk, highres_sitk, total_sitk, coronary_sitk]:
         img.CopyInformation(bodyregions_sitk)
 
@@ -67,9 +66,8 @@ def _process_subject(subject, src_path, dst_path, margin_mm):
     if bodyregions.sum() == 0 or trunk.sum() == 0 or highres.sum() == 0:
         return None
 
-    # Remove border-touching cases
     if (
-        trunk[0].sum() > 0 or trunk[-1].sum() > 0 or
+        trunk[0].sum() > 0 or
         trunk[:, 0].sum() > 0 or trunk[:, -1].sum() > 0 or
         trunk[:, :, 0].sum() > 0 or trunk[:, :, -1].sum() > 0
     ):
@@ -99,24 +97,32 @@ def _process_subject(subject, src_path, dst_path, margin_mm):
     z_start = max(0, z_min - margin_vox[2])
     z_end = min(size_img[2], z_max + margin_vox[2] + 1)
 
-    roi_size = [x_end - x_start, y_end - y_start, z_end - z_start]
+    roi_size = [
+        int(x_end - x_start),
+        int(y_end - y_start),
+        int(z_end - z_start),
+    ]
 
     def roi(img):
         return sitk.RegionOfInterest(
             img,
             size=roi_size,
-            index=[x_start, y_start, z_start],
+            index=[int(x_start), int(y_start), int(z_start)],
         )
 
-    return {
-        "id": subject_id,
-        "img": roi(img_sitk),
-        "trunk": roi(trunk_sitk),
-        "highres": roi(highres_sitk),
-        "total": roi(total_sitk),
-        "coronary": roi(coronary_sitk),
-        "label": roi(bodyregions_sitk),
-    }
+    sid = subject.split("_")[1]
+
+    # -------------------------
+    # WRITE DIRECTLY (IMPORTANT)
+    # -------------------------
+    sitk.WriteImage(roi(img_sitk), os.path.join(dst_path, f"saros_{sid}_img.nii.gz"))
+    sitk.WriteImage(roi(highres_sitk), os.path.join(dst_path, f"saros_{sid}_ts_heartchambershighres.nii.gz"))
+    sitk.WriteImage(roi(total_sitk), os.path.join(dst_path, f"saros_{sid}_ts_total.nii.gz"))
+    sitk.WriteImage(roi(coronary_sitk), os.path.join(dst_path, f"saros_{sid}_ts_coronaryarteries.nii.gz"))
+    sitk.WriteImage(roi(trunk_sitk), os.path.join(dst_path, f"saros_{sid}_ts_trunkcavities.nii.gz"))
+    sitk.WriteImage(roi(bodyregions_sitk), os.path.join(dst_path, f"saros_{sid}_label.nii.gz"))
+
+    return sid
 
 
 # ----------------------------
@@ -138,26 +144,12 @@ def collect_saros_cases_parallel(src_path, dst_path, margin_mm=20, workers=None)
     )
 
     with ProcessPoolExecutor(max_workers=workers) as ex:
-        results = list(
-            tqdm(
-                ex.map(worker_fn, subjects),
-                total=len(subjects),
-                desc="Collecting SAROS cases",
-            )
-        )
-
-    for res in results:
-        if res is None:
-            continue
-
-        sid = res["id"]
-
-        sitk.WriteImage(res["img"], os.path.join(dst_path, f"saros_{sid}_img.nii.gz"))
-        sitk.WriteImage(res["highres"], os.path.join(dst_path, f"saros_{sid}_ts_heartchambershighres.nii.gz"))
-        sitk.WriteImage(res["total"], os.path.join(dst_path, f"saros_{sid}_ts_total.nii.gz"))
-        sitk.WriteImage(res["coronary"], os.path.join(dst_path, f"saros_{sid}_ts_coronaryarteries.nii.gz"))
-        sitk.WriteImage(res["trunk"], os.path.join(dst_path, f"saros_{sid}_ts_trunkcavities.nii.gz"))
-        sitk.WriteImage(res["label"], os.path.join(dst_path, f"saros_{sid}_label.nii.gz"))
+        for _ in tqdm(
+            ex.map(worker_fn, subjects),
+            total=len(subjects),
+            desc="Collecting SAROS cases",
+        ):
+            pass
 
 
 # ----------------------------
@@ -203,8 +195,8 @@ def main():
     parser.add_argument("--dst", default=DEFAULT_DST)
     parser.add_argument("--mode", choices=["organize", "reorient", "both"], default="both")
     parser.add_argument("--direction", default="LPS")
-    parser.add_argument("--workers", type=int, default=None)
-    parser.add_argument("--margin-mm", type=int, default=20)
+    parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--margin-mm", type=int, default=4)
 
     args = parser.parse_args()
 
