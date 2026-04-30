@@ -11,7 +11,7 @@ import saros_utils as utils
 
 
 DEFAULT_SRC = "/storage/awias/saros_raw"
-DEFAULT_DST = "/data/awias/periseg/saros/NIFTI_collected"
+DEFAULT_DST = "/data/awias/periseg/saros/NIFTI_collected_test"
 
 
 def collect_saros_cases(src_path, dst_path, margin_mm=20):
@@ -220,11 +220,12 @@ def main():
     args = parser.parse_args()
 
     if args.mode in ("organize", "both"):
+        print("Organizing and cropping SAROS cases...")
         collect_saros_cases(args.src, args.dst, margin_mm=args.margin_mm)
 
     if args.mode in ("reorient", "both"):
+        print("Reorienting files...")
         reorient_folder(args.dst, direction=args.direction, workers=args.workers)
-
 
 if __name__ == "__main__":
     main()
