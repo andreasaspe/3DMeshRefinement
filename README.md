@@ -10,10 +10,11 @@ This repository contains a pipeline for preprocessing, segmentation, and mesh re
 
 Installing PyTorch3D can be tricky due to strict compatibility requirements between Python, CUDA, and PyTorch.
 
-First, choose a CUDA version compatible with your GPU. Then install a matching PyTorch build for that CUDA version.
+First, choose a CUDA version compatible with your GPU. Then install a matching PyTorch build for that CUDA version by following the guide in [Pytorch](https://pytorch.org/).
 
 Next, install a PyTorch3D version that matches both your Python and CUDA versions. Precompiled wheels are available here:
-https://miropsota.github.io/torch_packages_builder/pytorch3d/. More info can be found here: https://github.com/MiroPsota/torch_packages_builder
+[PyTorch3D wheels](https://miropsota.github.io/torch_packages_builder/pytorch3d/)
+. More info can be found here: [torch_packages_builder GitHub](https://github.com/MiroPsota/torch_packages_builder)
 
 Naming convention:
 
