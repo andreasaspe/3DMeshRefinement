@@ -117,8 +117,8 @@ This generates aggregated performance metrics across the dataset.
 
 ---
 
-## Notes
+## To do
 
-- Ensure all preprocessing steps are completed before running refinement.
-- Consistent LPS orientation is required for correct geometric alignment.
-- Make sure TotalSegmentator outputs are correctly matched to each case ID.
+- Make a little better format of paths and such in the run_refinement.py script
+- Improve the summary script
+- Add tables for optimal hyperparameters and what TS objects to include
