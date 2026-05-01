@@ -1227,15 +1227,22 @@ def create_internal_external_vector_fields_fast(mask_arr, COM_zyx, spacing, regi
     return Vx, Vy, Vz
 
 
-def load_or_create_vector_fields(msk_inside, msk_outside, com_zyx, spacing, vf_combined_path = None):
-    """Load or create inside/outside vector fields and persist them in a single file."""
-    if os.path.exists(vf_combined_path):
+
+
+def load_or_create_vector_fields(msk_inside, msk_outside, com_zyx, spacing, vf_combined_path=None):
+    """Load or create inside/outside vector fields and optionally persist them."""
+
+    # Load if file exists
+    if vf_combined_path is not None and os.path.exists(vf_combined_path):
         print(f"Loading vector fields from {vf_combined_path}")
         combined_data = np.load(vf_combined_path).astype(np.float32)
+
         vx_outside, vy_outside, vz_outside = combined_data[0], combined_data[1], combined_data[2]
-        vx_inside, vy_inside, vz_inside = combined_data[3], combined_data[4], combined_data[5]
+        vx_inside,  vy_inside,  vz_inside  = combined_data[3], combined_data[4], combined_data[5]
+
         return vx_outside, vy_outside, vz_outside, vx_inside, vy_inside, vz_inside
 
+    # Otherwise compute
     print("Creating vector fields...")
     vx_outside, vy_outside, vz_outside = create_internal_external_vector_fields_fast(
         msk_outside, com_zyx, spacing, region="external"
@@ -1244,13 +1251,20 @@ def load_or_create_vector_fields(msk_inside, msk_outside, com_zyx, spacing, vf_c
         msk_inside, com_zyx, spacing, region="internal"
     )
 
+    # Combine
     combined_data = np.stack(
-        [vx_outside, vy_outside, vz_outside, vx_inside, vy_inside, vz_inside],
-        axis=0,
+        [vx_outside, vy_outside, vz_outside,
+         vx_inside,  vy_inside,  vz_inside],
+        axis=0
     ).astype(np.float32)
-    np.save(vf_combined_path, combined_data)
+
+    # Save ONLY if path is provided
+    if vf_combined_path is not None:
+        print(f"Saving vector fields to {vf_combined_path}")
+        np.save(vf_combined_path, combined_data)
 
     return vx_outside, vy_outside, vz_outside, vx_inside, vy_inside, vz_inside
+
 
 def _process_single_structure(args):
     """Worker function for parallel processing of a single structure."""
