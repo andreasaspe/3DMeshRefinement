@@ -81,7 +81,7 @@ for series in tqdm(all_series):
     msk_highres_sitk.SetSpacing(tuple(spacing / scale.cpu().numpy()))
     msk_highres = sitk.GetArrayFromImage(msk_highres_sitk)
     # Define binary masks
-    structures_not_to_include = [6,7]  # example structure IDs to exclude
+    structures_not_to_include = [6,7]
     for idx in structures_not_to_include:
         msk_highres[msk_highres == idx] = 0
     msk_highres_bin = np.isin(msk_highres, [1,2,3,4,5])
@@ -96,7 +96,7 @@ for series in tqdm(all_series):
     msk_total = sitk.GetArrayFromImage(msk_total_sitk)
     # Define binary masks
     mask_segment_61 = (msk_total == 61)
-    structures_not_to_include = [0, 51, 52, 53, 61, 62, 63]  # example structure IDs to exclude
+    structures_not_to_include = [0, 51, 52, 53, 61, 62, 63]
     for idx in structures_not_to_include:
         msk_total[msk_total == idx] = 0
 
