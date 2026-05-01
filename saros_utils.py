@@ -897,7 +897,7 @@ from skimage.measure import find_contours
 import warnings
 warnings.filterwarnings("ignore", message="No mtl file provided") # Ignore this ugly warning.
 
-def decimate_and_smooth_ALOT(surface_in, surface_out):
+def decimate_and_smooth(surface_in, surface_out):
     """
     This function decimates (minimizes) and smooths the surface mesh
     It reads the surface mesh, decimates it and smooths it
@@ -1226,6 +1226,32 @@ def create_internal_external_vector_fields_fast(mask_arr, COM_zyx, spacing, regi
 
     return Vx, Vy, Vz
 
+
+def load_or_create_vector_fields(msk_inside, msk_outside, com_zyx, spacing, vf_combined_path = None):
+    """Load or create inside/outside vector fields and persist them in a single file."""
+    if os.path.exists(vf_combined_path):
+        print(f"Loading vector fields from {vf_combined_path}")
+        combined_data = np.load(vf_combined_path).astype(np.float32)
+        vx_outside, vy_outside, vz_outside = combined_data[0], combined_data[1], combined_data[2]
+        vx_inside, vy_inside, vz_inside = combined_data[3], combined_data[4], combined_data[5]
+        return vx_outside, vy_outside, vz_outside, vx_inside, vy_inside, vz_inside
+
+    print("Creating vector fields...")
+    vx_outside, vy_outside, vz_outside = create_internal_external_vector_fields_fast(
+        msk_outside, com_zyx, spacing, region="external"
+    )
+    vx_inside, vy_inside, vz_inside = create_internal_external_vector_fields_fast(
+        msk_inside, com_zyx, spacing, region="internal"
+    )
+
+    combined_data = np.stack(
+        [vx_outside, vy_outside, vz_outside, vx_inside, vy_inside, vz_inside],
+        axis=0,
+    ).astype(np.float32)
+    np.save(vf_combined_path, combined_data)
+
+    return vx_outside, vy_outside, vz_outside, vx_inside, vy_inside, vz_inside
+
 def _process_single_structure(args):
     """Worker function for parallel processing of a single structure."""
     msk_total_original, structure_id, COM_zyx, shape = args
@@ -1434,3 +1460,19 @@ def count_area_overlaps(obj_path, msk_highres_bin, msk_total_bin,  reference_sit
         forbidden_region_total = overlap_voxels_volume
 
         return forbidden_region_highres, forbidden_region_total
+
+
+
+def load_and_normalize_itk(path, center, scale, spacing_override=None):
+    """Loads image and applies the mesh-space transformation."""
+    img = sitk.ReadImage(str(path))
+    if spacing_override is None:
+        spacing_override = img.GetSpacing()
+        
+    # Transform to match normalized mesh space
+    new_origin = (np.array(img.GetOrigin()) - center) / scale
+    new_spacing = np.array(spacing_override) / scale
+    
+    img.SetOrigin(tuple(new_origin))
+    img.SetSpacing(tuple(new_spacing))
+    return img
