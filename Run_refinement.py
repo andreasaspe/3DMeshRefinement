@@ -107,16 +107,17 @@ for series in tqdm(all_series):
     msk_coronaryarteries_sitk.SetSpacing(tuple(spacing / scale.cpu().numpy()))
     msk_coronaryarteries = sitk.GetArrayFromImage(msk_coronaryarteries_sitk)
 
-    # Inside
-    msk_inside = (msk_coronaryarteries > 0).copy()
+    # internal
+    msk_internal = (msk_coronaryarteries > 0).copy()
     hr_mask = msk_highres > 0
-    msk_inside |= hr_mask
-    msk_inside |= mask_segment_61
+    msk_internal |= hr_mask
+    msk_internal |= mask_segment_61
 
 
-    # Outside
-    msk_outside = (msk_total > 0).copy()
+    # external
+    msk_external = (msk_total > 0).copy()
 
+    # scaled_sitk
     msk_scaled_sitk = msk_highres_sitk
 
 
@@ -124,13 +125,13 @@ for series in tqdm(all_series):
     # ── Setup Single Path ────────────────────────────────────────────────
     vf_combined_path = os.path.join(vf_folder, f"{series}_VF_all.npy")
 
-    Vx_outside, Vy_outside, Vz_outside, Vx_inside, Vy_inside, Vz_inside = utils.load_or_create_vector_fields(msk_inside, msk_outside, COM_zyx, spacing, vf_combined_path)
+    Vx_external, Vy_external, Vz_external, Vx_internal, Vy_internal, Vz_internal = utils.load_or_create_vector_fields(msk_internal, msk_external, COM_zyx, spacing, vf_combined_path)
 
-    vector_field_inside = np.stack([Vx_inside, Vy_inside, Vz_inside], axis=0)
-    vector_field_inside_tensor = torch.from_numpy(vector_field_inside).float().to(device)
+    vector_field_internal = np.stack([Vx_internal, Vy_internal, Vz_internal], axis=0)
+    vector_field_internal_tensor = torch.from_numpy(vector_field_internal).float().to(device)
 
-    vector_field_outside = np.stack([Vx_outside, Vy_outside, Vz_outside], axis=0)
-    vector_field_outside_tensor = torch.from_numpy(vector_field_outside).float().to(device)
+    vector_field_external = np.stack([Vx_external, Vy_external, Vz_external], axis=0)
+    vector_field_external_tensor = torch.from_numpy(vector_field_external).float().to(device)
 
 
 
@@ -142,8 +143,8 @@ for series in tqdm(all_series):
     w_edge_p1                 = 0.001
     w_laplacian_p1            = 0.015
     w_normal_p1               = 0.001
-    w_vf_inside_p1            = 1
-    w_vf_outside_p1           = 0.35
+    w_vf_internal_p1            = 1
+    w_vf_external_p1           = 0.35
     w_edge_p2                 = w_edge_p1
     w_laplacian_p2            = w_laplacian_p1*2
     w_normal_p2               = 0.1
@@ -167,18 +168,18 @@ for series in tqdm(all_series):
 
     # ── Loss history lists ────────────────────────────────────────────────────────
     edge_losses, normal_losses, laplacian_losses = [], [], []
-    vectorfield_losses_inside, vectorfield_losses_outside = [], []
+    vectorfield_losses_internal, vectorfield_losses_external = [], []
     edge_losses_magnitude, normal_losses_magnitude, laplacian_losses_magnitude = [], [], []
-    vectorfield_losses_inside_magnitude, vectorfield_losses_outside_magnitude = [], []
+    vectorfield_losses_internal_magnitude, vectorfield_losses_external_magnitude = [], []
     lr_history = []
 
     # ── Initial diagnostics ───────────────────────────────────────────────────────
     loop = tqdm(range(Niter))
 
-    count_inside, _ = utils.count_vertices_in_mask(src_mesh, msk_inside, msk_scaled_sitk)
-    count_outside, _ = utils.count_vertices_in_mask(src_mesh, msk_outside, msk_scaled_sitk)
-    print(f"Initial vertex count in inside mask:  {count_inside}")
-    print(f"Initial vertex count in outside mask: {count_outside}")
+    count_internal, _ = utils.count_vertices_in_mask(src_mesh, msk_internal, msk_scaled_sitk)
+    count_external, _ = utils.count_vertices_in_mask(src_mesh, msk_external, msk_scaled_sitk)
+    print(f"Initial vertex count in internal mask:  {count_internal}")
+    print(f"Initial vertex count in external mask: {count_external}")
 
     # ── Optimization loop ─────────────────────────────────────────────────────────
     for i in loop:
@@ -193,8 +194,8 @@ for series in tqdm(all_series):
             w_edge       = w_edge_p1
             w_normal     = w_normal_p1
             w_laplacian  = w_laplacian_p1
-            w_vf_inside  = w_vf_inside_p1 
-            w_vf_outside = w_vf_outside_p1
+            w_vf_internal  = w_vf_internal_p1 
+            w_vf_external = w_vf_external_p1
 
         elif i < phase1_iters + phase2_length:
             # ── Phase 2: cosine blend from Phase-1 → Phase-2 targets ──────────
@@ -204,16 +205,16 @@ for series in tqdm(all_series):
             w_edge       = w_edge_p1      + (w_edge_p2      - w_edge_p1)      * blend
             w_normal     = w_normal_p1    + (w_normal_p2    - w_normal_p1)    * blend
             w_laplacian  = w_laplacian_p1 + (w_laplacian_p2 - w_laplacian_p1) * blend
-            w_vf_inside  = w_vf_inside_p1  + (w_vf_inside_p1  - w_vf_inside_p1)  * blend
-            w_vf_outside = w_vf_outside_p1 + (w_vf_outside_p1 - w_vf_outside_p1) * blend
+            w_vf_internal  = w_vf_internal_p1  + (w_vf_internal_p1  - w_vf_internal_p1)  * blend
+            w_vf_external = w_vf_external_p1 + (w_vf_external_p1 - w_vf_external_p1) * blend
 
         else:
             # ── Phase 3: fully relaxed — high regularization, vector field off ─
             w_edge       = w_edge_p2
             w_normal     = w_normal_p2
             w_laplacian  = w_laplacian_p2
-            w_vf_inside  = w_vf_inside_p1
-            w_vf_outside = w_vf_outside_p1
+            w_vf_internal  = w_vf_internal_p1
+            w_vf_external = w_vf_external_p1
 
         # ------------------------------------------------------------------
         # 2.  Forward pass
@@ -226,12 +227,12 @@ for series in tqdm(all_series):
         loss_normal    = mesh_normal_consistency(new_src_mesh)
         loss_laplacian = mesh_laplacian_smoothing(new_src_mesh, method="cot")
 
-        loss_vectorfield_inside = utils.vector_field_loss_stable_directional(
-            new_src_mesh, vector_field_inside_tensor, msk_scaled_sitk
+        loss_vectorfield_internal = utils.vector_field_loss_stable_directional(
+            new_src_mesh, vector_field_internal_tensor, msk_scaled_sitk
         )
 
-        loss_vectorfield_outside = utils.vector_field_loss_stable_directional(
-            new_src_mesh, vector_field_outside_tensor, msk_scaled_sitk
+        loss_vectorfield_external = utils.vector_field_loss_stable_directional(
+            new_src_mesh, vector_field_external_tensor, msk_scaled_sitk
         )
 
         loss_deform = torch.mean(deform_verts ** 2)
@@ -240,8 +241,8 @@ for series in tqdm(all_series):
             w_edge       * loss_edge      +
             w_normal     * loss_normal    +
             w_laplacian  * loss_laplacian +
-            w_vf_inside  * loss_vectorfield_inside  +
-            w_vf_outside * loss_vectorfield_outside
+            w_vf_internal  * loss_vectorfield_internal  +
+            w_vf_external * loss_vectorfield_external
         )
 
         # ------------------------------------------------------------------
@@ -250,20 +251,20 @@ for series in tqdm(all_series):
         edge_losses_weighted    = float(w_edge      * loss_edge.detach().cpu())
         normal_losses_weighted  = float(w_normal    * loss_normal.detach().cpu())
         lap_losses_weighted     = float(w_laplacian * loss_laplacian.detach().cpu())
-        vf_in_weighted          = float(w_vf_inside  * loss_vectorfield_inside.detach().cpu())
-        vf_out_weighted         = float(w_vf_outside * loss_vectorfield_outside.detach().cpu())
+        vf_in_weighted          = float(w_vf_internal  * loss_vectorfield_internal.detach().cpu())
+        vf_out_weighted         = float(w_vf_external * loss_vectorfield_external.detach().cpu())
 
         edge_losses.append(float(loss_edge.detach().cpu()))
         normal_losses.append(float(loss_normal.detach().cpu()))
         laplacian_losses.append(float(loss_laplacian.detach().cpu()))
-        vectorfield_losses_inside.append(float(loss_vectorfield_inside.detach().cpu()))
-        vectorfield_losses_outside.append(float(loss_vectorfield_outside.detach().cpu()))
+        vectorfield_losses_internal.append(float(loss_vectorfield_internal.detach().cpu()))
+        vectorfield_losses_external.append(float(loss_vectorfield_external.detach().cpu()))
 
         edge_losses_magnitude.append(edge_losses_weighted)
         normal_losses_magnitude.append(normal_losses_weighted)
         laplacian_losses_magnitude.append(lap_losses_weighted)
-        vectorfield_losses_inside_magnitude.append(vf_in_weighted)
-        vectorfield_losses_outside_magnitude.append(vf_out_weighted)
+        vectorfield_losses_internal_magnitude.append(vf_in_weighted)
+        vectorfield_losses_external_magnitude.append(vf_out_weighted)
 
         current_lr = optimizer.param_groups[0]['lr']
         lr_history.append(current_lr)
@@ -321,8 +322,8 @@ for series in tqdm(all_series):
     ax.plot(edge_losses, label="edge loss")
     ax.plot(normal_losses, label="normal loss")
     ax.plot(laplacian_losses, label="laplacian loss")
-    ax.plot(vectorfield_losses_inside, label="vector field loss")
-    ax.plot(vectorfield_losses_outside, label="vector field loss (outside)")
+    ax.plot(vectorfield_losses_internal, label="vector field loss")
+    ax.plot(vectorfield_losses_external, label="vector field loss (external)")
     ax.legend(fontsize="16")
     ax.set_xlabel("Iteration", fontsize="16")
     ax.set_ylabel("Loss", fontsize="16")
@@ -335,8 +336,8 @@ for series in tqdm(all_series):
     ax.plot(edge_losses_magnitude, label="edge loss (weighted)", color="blue")
     ax.plot(normal_losses_magnitude, label="normal loss (weighted)", color="orange")
     ax.plot(laplacian_losses_magnitude, label="laplacian loss (weighted)", color="green")
-    ax.plot(vectorfield_losses_inside_magnitude, label="vector field loss (inside)", color="red")
-    ax.plot(vectorfield_losses_outside_magnitude, label="vector field loss (outside)", color="black")
+    ax.plot(vectorfield_losses_internal_magnitude, label="vector field loss (internal)", color="red")
+    ax.plot(vectorfield_losses_external_magnitude, label="vector field loss (external)", color="black")
     ax.legend(fontsize="16")
     ax.set_xlabel("Iteration", fontsize="16")
     ax.set_ylabel("Loss magnitude", fontsize="16")
