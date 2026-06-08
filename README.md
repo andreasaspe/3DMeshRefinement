@@ -14,14 +14,14 @@ This repository contains the code for the paper:
 
 ## Citation
 
-`````bibtex
-@inproceedings{aspe2026,
+```bibtex
+@inproceedings{aspe2026anatomy,
   title     = {Anatomy-Aware 3D Mesh Refinement of Pericardium Segmentations on Computed Tomography},
   author    = {Aspe, Andreas W. and Pedersen, Jonas Jalili and Pham, Michael Huy Cuong and Johansen, Andreas Ohrt and K{\"u}hl, J{\o}rgen Tobias and Kofoed, Klaus Fuglsang and S{\o}rensen, Kristine Aavild and Paulsen, Rasmus R. and Sundgaard, Josefine Vilsb{\o}ll},
   booktitle = {Medical Image Understanding and Analysis (MIUA)},
   year      = {2026}
 }
-` ` `
+```
 
 ---
 
