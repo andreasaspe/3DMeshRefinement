@@ -149,6 +149,8 @@ for series in tqdm(all_series):
     w_normal_p1               = 0.001
     w_vf_internal_p1            = 1
     w_vf_external_p1           = 0.35
+    w_vf_inside_p2            = 1
+    w_vf_outside_p2           = 0.35
     w_edge_p2                 = w_edge_p1
     w_laplacian_p2            = w_laplacian_p1*2
     w_normal_p2               = 0.1
@@ -209,8 +211,8 @@ for series in tqdm(all_series):
             w_edge       = w_edge_p1      + (w_edge_p2      - w_edge_p1)      * blend
             w_normal     = w_normal_p1    + (w_normal_p2    - w_normal_p1)    * blend
             w_laplacian  = w_laplacian_p1 + (w_laplacian_p2 - w_laplacian_p1) * blend
-            w_vf_internal  = w_vf_internal_p1  + (w_vf_internal_p1  - w_vf_internal_p1)  * blend
-            w_vf_external = w_vf_external_p1 + (w_vf_external_p1 - w_vf_external_p1) * blend
+            w_vf_internal  = w_vf_internal_p1  + (w_vf_internal_p2  - w_vf_internal_p1)  * blend
+            w_vf_external = w_vf_external_p1 + (w_vf_external_p2 - w_vf_external_p1) * blend
 
         else:
             # ── Phase 3: fully relaxed — high regularization, vector field off ─
