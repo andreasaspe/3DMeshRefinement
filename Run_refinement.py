@@ -30,6 +30,10 @@ csv_path = "3DMeshRefinement/series.csv"
 # Vector fields folder
 vf_folder = f"/data/awias/periseg/saros/TS_pericardium/vector_fields"
 
+# Create VF output folder if it doesn't exist - this will save the vector fields when generated for the first time, and will be used for loading in subsequent runs to save time
+os.makedirs(vf_folder, exist_ok=True)
+
+
 # ═══════════════════════════════════════════════════════════════════════
 #                        MAIN LOOP
 # ═══════════════════════════════════════════════════════════════════════
