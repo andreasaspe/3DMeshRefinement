@@ -12,17 +12,6 @@ This repository contains the code for the paper:
 
 *The initial pericardium mesh is refined by combining anatomical forces — derived from neighbouring organ masks — with geometric forces (Laplacian smoothing, normal consistency, and edge length minimisation). Internal structures push the mesh outward; external structures push it inward. The result is an anatomically plausible mesh that no longer intersects internal cardiac structures.*
 
-## Citation
-
-```bibtex
-@inproceedings{aspe2026,
-  title     = {Anatomy-Aware 3D Mesh Refinement of Pericardium Segmentations on Computed Tomography},
-  author    = {Aspe, Andreas W. and Pedersen, Jonas Jalili and Pham, Michael Huy Cuong and Johansen, Andreas Ohrt and K{\"u}hl, J{\o}rgen Tobias and Kofoed, Klaus Fuglsang and S{\o}rensen, Kristine Aavild and Paulsen, Rasmus R. and Sundgaard, Josefine Vilsb{\o}ll},
-  booktitle = {Medical Image Understanding and Analysis (MIUA)},
-  year      = {2026}
-}
-```
-
 ---
 
 The following steps walk through downloading, preprocessing, segmenting, and refining meshes from the open-source SAROS dataset using TotalSegmentator and PyTorch3D.
