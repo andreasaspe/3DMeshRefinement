@@ -6,8 +6,6 @@ This repository contains the code for the paper:
 > Andreas W. Aspe, Jonas Jalili Pedersen, Michael Huy Cuong Pham, Andreas Ohrt Johansen, Jørgen Tobias Kühl, Klaus Fuglsang Kofoed, Kristine Aavild Sørensen, Rasmus R. Paulsen, Josefine Vilsbøll Sundgaard
 > *MIUA 2026*
 
----
-
 ![Method Overview](figures/Pipeline.png)
 
 *The initial pericardium mesh is refined by combining anatomical forces - derived from neighbouring organ masks - with geometric forces (Laplacian smoothing, normal consistency, and edge length minimisation). Internal structures push the mesh outward; external structures push it inward. The result is an anatomically plausible mesh that no longer intersects other anatomical structures.*
