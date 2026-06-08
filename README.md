@@ -1,8 +1,31 @@
-# 3D Mesh Refinement Pipeline
+# Anatomy-Aware 3D Mesh Refinement of Pericardium Segmentations
 
-This repository contains a pipeline for preprocessing, segmentation, and mesh refinement of the SAROS dataset using TotalSegmentator and PyTorch3D.
+This repository contains the code for the paper:
+
+> **Anatomy-Aware 3D Mesh Refinement of Pericardium Segmentations on Computed Tomography**
+> Andreas W. Aspe, Jonas Jalili Pedersen, Michael Huy Cuong Pham, Andreas Ohrt Johansen, Jørgen Tobias Kühl, Klaus Fuglsang Kofoed, Kristine Aavild Sørensen, Rasmus R. Paulsen, Josefine Vilsbøll Sundgaard
+> *MIUA 2026*
 
 ---
+
+![Method Overview](figures/Pipeline.png)
+
+*The initial pericardium mesh is refined by combining anatomical forces — derived from neighbouring organ masks — with geometric forces (Laplacian smoothing, normal consistency, and edge length minimisation). Internal structures push the mesh outward; external structures push it inward. The result is an anatomically plausible mesh that no longer intersects internal cardiac structures.*
+
+## Citation
+
+`````bibtex
+@inproceedings{aspe2026,
+  title     = {Anatomy-Aware 3D Mesh Refinement of Pericardium Segmentations on Computed Tomography},
+  author    = {Aspe, Andreas W. and Pedersen, Jonas Jalili and Pham, Michael Huy Cuong and Johansen, Andreas Ohrt and K{\"u}hl, J{\o}rgen Tobias and Kofoed, Klaus Fuglsang and S{\o}rensen, Kristine Aavild and Paulsen, Rasmus R. and Sundgaard, Josefine Vilsb{\o}ll},
+  booktitle = {Medical Image Understanding and Analysis (MIUA)},
+  year      = {2026}
+}
+` ` `
+
+---
+
+The following steps walk through downloading, preprocessing, segmenting, and refining meshes from the open-source SAROS dataset using TotalSegmentator and PyTorch3D.
 
 ## 1. Installation
 
@@ -117,8 +140,47 @@ This generates aggregated performance metrics across the dataset.
 
 ---
 
-## To do
+## Additional Information
 
-- Make a little better format of paths and such in the run_refinement.py script
+### Hyperparameters
+
+Hyperparameters used for mesh refinement on the CGPS and SAROS datasets.
+Both datasets employ the same three-phase optimization schedule and vector-field
+formulation, but differ in regularization strength and learning rate to account
+for different initial mesh configurations due to different image resolutions.
+
+| **Parameter** | **CGPS** | **SAROS** |
+|:---|:---:|:---:|
+| ***Optimization schedule*** | | |
+| Phase 1 iterations (vector-field dominant) | 1000 | 1000 |
+| Phase 2 iterations (smooth blending) | 500 | 500 |
+| Phase 3 iterations (regularization-only) | 500 | 500 |
+| Total iterations | 2000 | 2000 |
+| Initial learning rate | $10^{-3}$ | $10^{-4}$ |
+| Minimum learning rate | $10^{-6}$ | $10^{-6}$ |
+| Gradient clipping norm | 1.0 | 1.0 |
+| Weight decay | 0.002 | 0.002 |
+| ***Loss weights — Phase 1*** | | |
+| Edge loss weight ($\lambda_{E}$) | 1.0 | 0.001 |
+| Laplacian loss weight ($\lambda_{L}$) | 1.0 | 0.01 |
+| Normal consistency weight ($\lambda_{N}$) | 0.001 | 0.001 |
+| Internal vector field weight ($\lambda_{\text{vf-in}}$) | 8.0 | 1.0 |
+| External vector field weight ($\lambda_{\text{vf-ex}}$) | 0.5 | 0.5 |
+| ***Loss weights — Phase 3*** | | |
+| Edge loss weight ($\lambda_{E}$) | 2.0 | 0.001 |
+| Laplacian loss weight ($\lambda_{L}$) | 2.0 | 0.02 |
+| Normal consistency weight ($\lambda_{N}$) | 0.1 | 0.1 |
+| Internal vector field weight ($\lambda_{\text{vf-in}}$) | 8.0 | 1.0 |
+| External vector field weight ($\lambda_{\text{vf-ex}}$) | 0.5 | 0.5 |
+| ***Other settings*** | | |
+| Laplacian type | Uniform | Cotangent |
+| Taubin smoothing iterations | 50 | 50 |
+| Taubin parameters $(\lambda, \mu)$ | $(0.5, -0.53)$ | $(0.5, -0.53)$ |
+
+---
+
+## To Do
+
+- Make a little better format of paths and such in the `run_refinement.py` script
 - Improve the summary script
-- Add tables for optimal hyperparameters and what TS objects to include
+- Add table for TS objects to include
