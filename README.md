@@ -151,14 +151,14 @@ for different initial mesh configurations due to different image resolutions.
 | Edge loss weight ($\lambda_{E}$) | 1.0 | 0.001 |
 | Laplacian loss weight ($\lambda_{L}$) | 1.0 | 0.01 |
 | Normal consistency weight ($\lambda_{N}$) | 0.001 | 0.001 |
-| Internal vector field weight ($\lambda_{\text{vf-in}}$) | 8.0 | 1.0 |
-| External vector field weight ($\lambda_{\text{vf-ex}}$) | 0.5 | 0.5 |
+| Internal vector field weight ($\lambda_{\text{vf-in}}$) | 10 | 1.0 |
+| External vector field weight ($\lambda_{\text{vf-ex}}$) | 0.35 | 0.35 |
 | ***Loss weights — Phase 3*** | | |
 | Edge loss weight ($\lambda_{E}$) | 2.0 | 0.001 |
 | Laplacian loss weight ($\lambda_{L}$) | 2.0 | 0.02 |
 | Normal consistency weight ($\lambda_{N}$) | 0.1 | 0.1 |
-| Internal vector field weight ($\lambda_{\text{vf-in}}$) | 8.0 | 1.0 |
-| External vector field weight ($\lambda_{\text{vf-ex}}$) | 0.5 | 0.5 |
+| Internal vector field weight ($\lambda_{\text{vf-in}}$) | 10.0 | 1.0 |
+| External vector field weight ($\lambda_{\text{vf-ex}}$) | 0.35 | 0.35 |
 | ***Other settings*** | | |
 | Laplacian type | Uniform | Cotangent |
 | Taubin smoothing iterations | 50 | 50 |
