@@ -166,7 +166,7 @@ for different initial mesh configurations due to different image resolutions.
 
 ### Anatomical references for creation of vector field
 
-Several structures from different tasks from TotalSegmentator was utilized to compute the internal and external vector fields. Specifically we utilised the classes \textit{total}, \textit{heartchambers\_higres} and \textit{coronary\_arteries}. For each class we went through each of the organs, represented with individual labels, to define, whether they belong internally and externally to the pericardium. The table below presents an overview of this anatomical division. Note that some structures were excluded from the analysis (indicated by the dashed symbol), as no general rule defines them as strictly internal or external, or they are already covered by another class.
+Several structures from different tasks from TotalSegmentator was utilized to compute the internal and external vector fields. Specifically we utilised the classes \textit{total}, \textit{heartchambers\_higres} and \textit{coronary\_arteries}. For each class we went through each of the organs, represented with individual labels, to define, whether they belong internally and externally to the pericardium. The table below presents an overview of this anatomical division. Note that some structures were excluded from the analysis (indicated by the dash), as no general rule defines them as strictly internal or external, or they are already covered by another class.
 
 | **Class** | **Label(s)** | **Structure(s)** | **Category** |
 |:---|:---|:---|:---:|
