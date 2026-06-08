@@ -164,6 +164,19 @@ for different initial mesh configurations due to different image resolutions.
 | Taubin smoothing iterations | 50 | 50 |
 | Taubin parameters $(\lambda, \mu)$ | $(0.5, -0.53)$ | $(0.5, -0.53)$ |
 
+### Anatomical references for creation of vector field
+
+Several structures from different tasks from TotalSegmentator was utilized to compute the internal and external vector fields. Specifically we utilised the classes \textit{total}, \textit{heartchambers\_higres} and \textit{coronary\_arteries}. For each class we went through each of the organs, represented with individual labels, to define, whether they belong internally and externally to the pericardium. The table below presents an overview of this anatomical division.
+
+| **Class** | **Label(s)** | **Structure(s)** | **Category** |
+|:---|:---|:---|:---|
+| *total* | 61 | atrial_appendage_left | Internal |
+| *total* | 1–50, 54–60, 64–117 | All remaining structures | External |
+| *total* | 51, 52, 53, 62, 63 | heart, aorta, pulmonary_vein, superior_vena_cava, inferior_vena_cava | - |
+| *heartchambers_highres* | 1–5 | myocardium, atria, ventricles | Internal |
+| *heartchambers_highres* | 6-7 | aorta, pulmonary_artery  | - |
+| *coronary_arteries* | 1 | coronary_arteries | Internal |
+
 ---
 
 ## To Do
