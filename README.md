@@ -166,10 +166,10 @@ for different initial mesh configurations due to different image resolutions.
 
 ### Anatomical references for creation of vector field
 
-Several structures from different tasks from TotalSegmentator was utilized to compute the internal and external vector fields. Specifically we utilised the classes \textit{total}, \textit{heartchambers\_higres} and \textit{coronary\_arteries}. For each class we went through each of the organs, represented with individual labels, to define, whether they belong internally and externally to the pericardium. The table below presents an overview of this anatomical division.
+Several structures from different tasks from TotalSegmentator was utilized to compute the internal and external vector fields. Specifically we utilised the classes \textit{total}, \textit{heartchambers\_higres} and \textit{coronary\_arteries}. For each class we went through each of the organs, represented with individual labels, to define, whether they belong internally and externally to the pericardium. The table below presents an overview of this anatomical division. Note that some structures were excluded from the analysis (indicated by '-'), as no general rule defines them as strictly internal or external, or they are already covered by another class.
 
 | **Class** | **Label(s)** | **Structure(s)** | **Category** |
-|:---|:---|:---|:---|
+|:---|:---|:---|:---:|
 | *total* | 61 | atrial_appendage_left | Internal |
 | *total* | 1–50, 54–60, 64–117 | All remaining structures | External |
 | *total* | 51, 52, 53, 62, 63 | heart, aorta, pulmonary_vein, superior_vena_cava, inferior_vena_cava | - |
@@ -183,4 +183,3 @@ Several structures from different tasks from TotalSegmentator was utilized to co
 
 - Make a little better format of paths and such in the `run_refinement.py` script
 - Improve the summary script
-- Add table for TS objects to include
