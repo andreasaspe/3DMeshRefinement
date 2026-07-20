@@ -107,6 +107,14 @@ python run_refinement.py
 ```
 
 This performs the actual 3D mesh refinement using the preprocessed SAROS data.
+For each series it builds an initial mesh from the segmentation, optimises it
+against the internal/external anatomical vector fields (three-phase schedule,
+see hyperparameters below), applies Taubin smoothing, and saves the refined
+`.obj` mesh plus loss/learning-rate plots.
+
+> **Note:** paths are hardcoded at the top of the script (`output_folder_root`,
+> `data_folder`, `vf_folder`, and `csv_path`). Edit these to point at your own
+> data before running.
 
 ---
 
@@ -118,13 +126,21 @@ This performs the actual 3D mesh refinement using the preprocessed SAROS data.
 python metrics_saros.py calculate
 ```
 
+Computes the before/after metrics (Dice, EAT Dice, NSD, HD, HD95, ASD, ASSD,
+and internal/external anatomical violations) for every refined series and
+writes them to a CSV. Paths are set via the `DEFAULT_*` constants at the top of
+the script or overridden with CLI flags (`--pytorch3d-folder`, `--data-folder`,
+etc.).
+
 ### 6.2 Summarise results
 
 ```bash
-python metrics_saros.py summarize --csv-path /data/awias/periseg/saros/TS_pericardium/pytorch3d/metrics/best_grid_search_result_EXCLUDEGRID_EAT0/metrics_summary_taubin.csv
+python metrics_saros.py summarize --csv-path <path-to-metrics-csv>
 ```
 
-This generates aggregated performance metrics across the dataset.
+Reads the CSV, prints the mean ± std before/after (and delta) for each metric to
+the terminal, and saves before/after boxplots as `metrics_summary_plot.png` next
+to the CSV.
 
 ---
 
