@@ -206,9 +206,3 @@ Several structures from different tasks from TotalSegmentator was utilized to co
 | *coronary_arteries* | 1 | coronary_arteries | Internal |
 
 ---
-
-## To Do
-
-- Make a little better format of paths and such in the `run_refinement.py` script
-- Improve the summary script
-- Fix section 1.2 about other dependencies
