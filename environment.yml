@@ -1,0 +1,21 @@
+name: pyt3d
+# NOTE: torch, torchvision, torchaudio and pytorch3d are NOT listed here.
+# Install them first following the instructions in section 1.1 of the README,
+# then create/update this environment for the remaining dependencies.
+channels:
+  - conda-forge
+dependencies:
+  - python=3.13.0
+  - numpy
+  - pandas
+  - scipy
+  - matplotlib
+  - tqdm
+  - simpleitk
+  - vtk
+  - scikit-image
+  - pip
+  - pip:
+      - edt
+      # Optional: only needed if you use the vmtk-based utilities in saros_utils.py
+      # - vmtk

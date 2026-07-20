@@ -45,6 +45,17 @@ pip install --extra-index-url https://miropsota.github.io/torch_packages_builder
 
 ### 1.2 Other dependencies
 
+Once the torch/PyTorch3D stack from §1.1 is installed, install the remaining
+dependencies into the same environment:
+
+```bash
+conda env update -n pyt3d -f environment.yml
+```
+
+This adds numpy, pandas, scipy, matplotlib, tqdm, SimpleITK, vtk, scikit-image
+and edt. `vmtk` is optional (commented out in `environment.yml`) and only needed
+for the vmtk-based utilities in `saros_utils.py`.
+
 ---
 
 ## 2. Download SAROS dataset
