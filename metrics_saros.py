@@ -188,12 +188,7 @@ def calculate_metrics(
 
 
 def summarize_metrics(csv_path):
-    import matplotlib as mpl
     import matplotlib.pyplot as plt
-
-    mpl.rcParams["savefig.dpi"] = 150
-    mpl.rcParams["figure.dpi"] = 100
-    mpl.rcParams["font.size"] = 10
 
     metrics = [
         "Dice",
@@ -207,24 +202,13 @@ def summarize_metrics(csv_path):
         "volume_overlap_outside",
     ]
 
-    higher_is_better = {
-        "Dice": True,
-        "EAT_Dice": True,
-        "ASD": False,
-        "ASSD": False,
-        "HD": False,
-        "HD95": False,
-        "NSD": True,
-        "volume_overlap_inside": False,
-        "volume_overlap_outside": False,
-    }
-
     if not os.path.isfile(csv_path):
         raise FileNotFoundError(f"File not found: {csv_path}")
 
     df = pd.read_csv(csv_path)
-    print(f"\nLoaded {len(df)} series from {csv_path}\n")
+    print(f"Loaded {len(df)} series from {csv_path}\n")
 
+    # Convert to more readable units
     for metric in ["Dice", "EAT_Dice", "NSD"]:
         for prefix in ["before_", "after_"]:
             col = f"{prefix}{metric}"
@@ -237,249 +221,36 @@ def summarize_metrics(csv_path):
             if col in df.columns:
                 df[col] /= 1000
 
-    short_labels = ["_".join(s.split("_")[-2:]) if len(s) > 25 else s for s in df["series"]]
-    x = np.arange(len(df))
+    for metric in metrics:
+        b_col, a_col = f"before_{metric}", f"after_{metric}"
+        if b_col not in df.columns:
+            continue
+        b_mean, b_std = df[b_col].mean(), df[b_col].std()
+        a_mean, a_std = df[a_col].mean(), df[a_col].std()
+        print(
+            f"{metric:<25} before = {b_mean:7.2f} ± {b_std:5.2f}   "
+            f"after = {a_mean:7.2f} ± {a_std:5.2f}   "
+            f"delta = {a_mean - b_mean:+7.2f}"
+        )
 
-    sep = "=" * 90
-    print(sep)
-    print(f"{'Series':<35} {'Metric':<10} {'Before':>9} {'After':>9} {'Delta':>9} {'OK?':>5}")
-    print("-" * 90)
+    plot_metrics = [m for m in metrics if f"before_{m}" in df.columns]
+    ncols = 3
+    nrows = -(-len(plot_metrics) // ncols)
+    fig, axes = plt.subplots(nrows, ncols, figsize=(5 * ncols, 4 * nrows))
+    axes = np.atleast_1d(axes).flatten()
 
-    for _, row in df.iterrows():
-        for metric in metrics:
-            b_col, a_col = f"before_{metric}", f"after_{metric}"
-            if b_col not in df.columns:
-                continue
-            b, a = row[b_col], row[a_col]
-            d = a - b
-            if b != 0:
-                performance_gain = (a - b) / abs(b) * 100 if higher_is_better[metric] else (b - a) / abs(b) * 100
-            else:
-                performance_gain = float("nan")
+    for ax, metric in zip(axes, plot_metrics):
+        b_col, a_col = f"before_{metric}", f"after_{metric}"
+        ax.boxplot([df[b_col].dropna(), df[a_col].dropna()], tick_labels=["before", "after"])
+        ax.set_title(metric)
 
-            improved = (d > 0) if higher_is_better[metric] else (d < 0)
-            tag = " ✓" if improved else " ✗"
-            print(
-                f"{row['series']:<35} {metric:<10} {b:>9.2f} {a:>9.2f} {d:>+9.2f} {performance_gain:>+7.2f}% {tag:>5}"
-            )
+    for ax in axes[len(plot_metrics):]:
+        ax.axis("off")
 
-    if len(df) > 1:
-        print("-" * 120)
-        for metric in metrics:
-            b_col, a_col = f"before_{metric}", f"after_{metric}"
-            if b_col not in df.columns:
-                continue
-            b_mean = df[b_col].mean()
-            a_mean = df[a_col].mean()
-            b_std = df[b_col].std()
-            a_std = df[a_col].std()
-            d = a_mean - b_mean
-
-            if b_mean != 0:
-                performance_gain = (a_mean - b_mean) / abs(b_mean) * 100 if higher_is_better[metric] else (b_mean - a_mean) / abs(b_mean) * 100
-            else:
-                performance_gain = float("nan")
-
-            improved = (d > 0) if higher_is_better[metric] else (d < 0)
-            tag = " ✓" if improved else " ✗"
-            print(
-                f"{'MEAN':<20} {metric:<10} {b_mean:>9.2f} ± {b_std:<8.2f} {a_mean:>9.2f} ± {a_std:<8.2f} {d:>+9.2f}  {performance_gain:>+7.2f}% {tag:>5}"
-            )
-
-    print(sep)
-
-    name_map = {
-        "Dice": r"\text{DSC}\, (\%)",
-        "EAT_Dice": r"\text{DSC}_{\text{EAT}}\, (\%)",
-        "NSD": r"\text{NSD}\, (\%)",
-        "HD": r"\text{HD}\, (\text{mm})",
-        "HD95": r"\text{HD95}\, (\text{mm})",
-        "ASSD": r"\text{ASSD}\, (\text{mm})",
-        "volume_overlap_inside": r"\text{Internal Violation}\, (\text{cm}^3)",
-        "volume_overlap_outside": r"\text{External Violation}\, (\text{cm}^3)",
-    }
-
-    metrics_to_include = [
-        "Dice",
-        "EAT_Dice",
-        "NSD",
-        "HD95",
-        "ASSD",
-        "volume_overlap_inside",
-        "volume_overlap_outside",
-    ]
-
-    median_metrics = ["volume_overlap_inside", "volume_overlap_outside"]
-
-    if len(df) > 1:
-        for metric in metrics_to_include:
-            b_col, a_col = f"before_{metric}", f"after_{metric}"
-            if b_col not in df.columns:
-                continue
-
-            higher = higher_is_better[metric]
-            arrow = r"$\uparrow$" if higher else r"$\downarrow$"
-            name = name_map.get(metric, rf"\text{{{metric}}}")
-
-            if metric in median_metrics:
-                b_vals = df[b_col].values
-                a_vals = df[a_col].values
-
-                b_median = np.median(b_vals)
-                a_median = np.median(a_vals)
-
-                b_q25 = np.percentile(b_vals, 25)
-                b_q75 = np.percentile(b_vals, 75)
-
-                a_q25 = np.percentile(a_vals, 25)
-                a_q75 = np.percentile(a_vals, 75)
-
-                if b_median != 0:
-                    performance_gain = (
-                        (a_median - b_median) / abs(b_median) * 100
-                        if higher
-                        else (b_median - a_median) / abs(b_median) * 100
-                    )
-                else:
-                    performance_gain = float("nan")
-
-                if higher:
-                    before_str = (
-                        rf"\mathbf{{{b_median:.2f}}} \ [{b_q25:.1f}, {b_q75:.1f}]"
-                        if b_median >= a_median
-                        else rf"{b_median:.2f} \ [{b_q25:.1f}, {b_q75:.1f}]"
-                    )
-                    after_str = (
-                        rf"\mathbf{{{a_median:.2f}}} \ [{a_q25:.1f}, {a_q75:.1f}]"
-                        if a_median > b_median
-                        else rf"{a_median:.2f} \ [{a_q25:.1f}, {a_q75:.1f}]"
-                    )
-                else:
-                    before_str = (
-                        rf"\mathbf{{{b_median:.2f}}} \ [{b_q25:.1f}, {b_q75:.1f}]"
-                        if b_median <= a_median
-                        else rf"{b_median:.2f} \ [{b_q25:.1f}, {b_q75:.1f}]"
-                    )
-                    after_str = (
-                        rf"\mathbf{{{a_median:.2f}}} \ [{a_q25:.1f}, {a_q75:.1f}]"
-                        if a_median < b_median
-                        else rf"{a_median:.2f} \ [{a_q25:.1f}, {a_q75:.1f}]"
-                    )
-
-            else:
-                b_mean = df[b_col].mean()
-                a_mean = df[a_col].mean()
-                b_std = df[b_col].std()
-                a_std = df[a_col].std()
-
-                if b_mean != 0:
-                    performance_gain = (
-                        (a_mean - b_mean) / abs(b_mean) * 100
-                        if higher
-                        else (b_mean - a_mean) / abs(b_mean) * 100
-                    )
-                else:
-                    performance_gain = float("nan")
-
-                if higher:
-                    before_str = (
-                        rf"\mathbf{{{b_mean:.2f}}} \pm {b_std:.2f}"
-                        if b_mean >= a_mean
-                        else rf"{b_mean:.2f} \pm {b_std:.2f}"
-                    )
-                    after_str = (
-                        rf"\mathbf{{{a_mean:.2f}}} \pm {a_std:.2f}"
-                        if a_mean > b_mean
-                        else rf"{a_mean:.2f} \pm {a_std:.2f}"
-                    )
-                else:
-                    before_str = (
-                        rf"\mathbf{{{b_mean:.2f}}} \pm {b_std:.2f}"
-                        if b_mean <= a_mean
-                        else rf"{b_mean:.2f} \pm {b_std:.2f}"
-                    )
-                    after_str = (
-                        rf"\mathbf{{{a_mean:.2f}}} \pm {a_std:.2f}"
-                        if a_mean < b_mean
-                        else rf"{a_mean:.2f} \pm {a_std:.2f}"
-                    )
-
-            sign = "+" if performance_gain >= 0 else ""
-
-            row = (
-                f"& {arrow} ${name}$ "
-                f"& ${before_str}$ "
-                f"& ${after_str}$ "
-                f"& ${sign}{performance_gain:.2f}$\\,\\% \\\\"
-            )
-
-            print(row)
-
-    anatomical_metrics = {
-        "volume_overlap_outside": "External Violation",
-        "volume_overlap_inside": "Internal Violation",
-    }
-
-    print("\n% --- ANATOMICAL VIOLATION TABLE ---")
-    if len(df) > 1:
-        for metric, display_name in anatomical_metrics.items():
-            b_col, a_col = f"before_{metric}", f"after_{metric}"
-            if b_col not in df.columns:
-                continue
-
-            reductions = []
-            improved_count = 0
-
-            for _, row in df.iterrows():
-                b_val, a_val = row[b_col], row[a_col]
-                if b_val > 0:
-                    reduction = (b_val - a_val) / b_val * 100
-                    reductions.append(reduction)
-                    if a_val < b_val:
-                        improved_count += 1
-                elif b_val == 0 and a_val == 0:
-                    improved_count += 1
-
-            if reductions:
-                median_reduction = np.median(reductions)
-                q25 = np.percentile(reductions, 25)
-                q75 = np.percentile(reductions, 75)
-            else:
-                median_reduction = 0
-                q25 = 0
-                q75 = 0
-
-            row_tex = f"& {display_name} & {median_reduction:.1f} [{q25:.1f}, {q75:.1f}] \\\\"
-            print(row_tex)
-
-    print("\n% --- ANATOMICAL VIOLATION TABLE NEW ---")
-    if len(df) > 1:
-        for metric, display_name in anatomical_metrics.items():
-            b_col, a_col = f"before_{metric}", f"after_{metric}"
-            if b_col not in df.columns:
-                continue
-
-            before_values = df[b_col].values
-            median_before = np.median(before_values)
-            q25_before = np.percentile(before_values, 25)
-            q75_before = np.percentile(before_values, 75)
-
-            after_values = df[a_col].values
-            median_after = np.median(after_values)
-            q25_after = np.percentile(after_values, 25)
-            q75_after = np.percentile(after_values, 75)
-
-            performance_gain = (
-                (median_after - median_before) / abs(median_before) * 100
-                if median_before != 0
-                else float("nan")
-            )
-            tag = " ✓" if (median_after < median_before) else " ✗"
-
-            print(
-                f"{'median':<20} {metric:<10} {median_before:>9.2f} [{q25_before:.1f}, {q75_before:.1f}] "
-                f"{median_after:>9.2f} [{q25_after:.1f}, {q75_after:.1f}] {performance_gain:>+7.2f}% {tag:>5}"
-            )
+    plt.tight_layout()
+    plot_path = os.path.join(os.path.dirname(csv_path) or ".", "metrics_summary_plot.png")
+    plt.savefig(plot_path, dpi=150)
+    print(f"\nSaved plot to {plot_path}")
 
     return df
 
