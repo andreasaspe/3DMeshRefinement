@@ -128,10 +128,10 @@ see hyperparameters below), applies Taubin smoothing, and saves the refined
 > data before running.
 
 > **CGPS reference:** `misc/Run_refinement_CGPS.py` is the equivalent script used
-> for the private CGPS (DTU-Pericardium) dataset. It is included **for reference
-> only** — CGPS is not publicly available and the script relies on in-house helper
-> modules, so it is not runnable as-is. It documents the CGPS-specific
-> hyperparameters (see the table below).
+> for the private CGPS (DTU-Pericardium) dataset. It reuses the same `saros_utils`
+> helpers as the SAROS pipeline but is included **for reference only** — CGPS is
+> not publicly available, so it is not runnable as-is. It documents the
+> CGPS-specific hyperparameters (see the table below).
 
 ---
 

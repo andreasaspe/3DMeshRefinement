@@ -3,15 +3,18 @@ Reference-only mesh-refinement script for the private CGPS
 (DTU-Pericardium) dataset.
 
 This is the CGPS counterpart of ``Run_refinement.py`` (SAROS). It is kept here
-purely as a reference for reproducibility and future work. CGPS is a private
-dataset, and this script also depends on in-house helper modules (``tools``,
-``processing_tools``, ``my_functions``) that are NOT part of this repository.
-It is therefore NOT runnable as-is — see ``Run_refinement.py`` in the repo root
-for the public, runnable SAROS pipeline.
+purely as a reference for reproducibility and future work. It reuses the same
+helper functions from ``saros_utils`` as the SAROS pipeline. CGPS is a private
+dataset, so this script is NOT runnable as-is (the data paths point at internal
+storage) — see ``Run_refinement.py`` in the repo root for the public, runnable
+SAROS pipeline.
 
 The optimization schedule and losses mirror the SAROS script; only the
 regularization weights, learning rate and Laplacian type differ (see the
-hyperparameter table in the README, "CGPS" column).
+hyperparameter table in the README, "CGPS" column). One helper also differs: the
+original CGPS run used a heavier-decimation variant (``decimate_and_smooth_ALOT``)
+which is not part of the public ``saros_utils``; here it is replaced by the
+public ``utils.decimate_and_smooth``.
 """
 
 import os
@@ -28,10 +31,7 @@ from pytorch3d.loss import mesh_edge_loss, mesh_laplacian_smoothing, mesh_normal
 from scipy.ndimage import center_of_mass
 from tqdm import tqdm
 
-# In-house / private helper modules (not included in this repository)
-import tools as tools
-import processing_tools as pt
-from my_functions import *
+import saros_utils as utils
 
 mpl.rcParams["savefig.dpi"] = 80
 mpl.rcParams["figure.dpi"] = 80
@@ -77,9 +77,9 @@ for series in tqdm(all_series):
     mesh_smoothed_path_obj = os.path.join(output_folder, series + "_smoothedsurface.obj")
 
 
-    pt.convert_label_map_to_surface_file(TS_trunkcavities_path, mesh_path, segment_id=3)
-    decimate_and_smooth_ALOT(mesh_path, mesh_smoothed_path)
-    tools.convert_vtk_to_obj(mesh_smoothed_path, mesh_smoothed_path_obj)
+    utils.convert_label_map_to_surface_file(TS_trunkcavities_path, mesh_path, segment_id=3)
+    utils.decimate_and_smooth(mesh_path, mesh_smoothed_path)
+    utils.convert_vtk_to_obj(mesh_smoothed_path, mesh_smoothed_path_obj)
 
     # Load the smoothed mesh and normalize
     verts, faces, aux = load_obj(mesh_smoothed_path_obj)
@@ -142,23 +142,11 @@ for series in tqdm(all_series):
 
 
     # ── Load or create vector fields ──────────────────────────────────────
-    # Everything is stored in one (6, Z, Y, X) float32 file (0-2 outside, 3-5 inside)
     vf_combined_path = os.path.join(vf_folder, f"{series}_VF_all.npy")
 
-    if os.path.exists(vf_combined_path):
-        combined_data = np.load(vf_combined_path).astype(np.float32)
-        Vx_outside, Vy_outside, Vz_outside = combined_data[0], combined_data[1], combined_data[2]
-        Vx_inside,  Vy_inside,  Vz_inside  = combined_data[3], combined_data[4], combined_data[5]
-    else:
-        Vx_outside, Vy_outside, Vz_outside = create_internal_external_vector_fields_fast(
-            msk_outside, COM_zyx, spacing, region="external")
-        Vx_inside, Vy_inside, Vz_inside = create_internal_external_vector_fields_fast(
-            msk_inside, COM_zyx, spacing, region="internal")
-        combined_data = np.stack([
-            Vx_outside, Vy_outside, Vz_outside,
-            Vx_inside,  Vy_inside,  Vz_inside,
-        ], axis=0).astype(np.float32)
-        np.save(vf_combined_path, combined_data)
+    Vx_outside, Vy_outside, Vz_outside, Vx_inside, Vy_inside, Vz_inside = utils.load_or_create_vector_fields(
+        msk_inside, msk_outside, COM_zyx, spacing, vf_combined_path
+    )
 
     vector_field_inside = np.stack([Vx_inside, Vy_inside, Vz_inside], axis=0)
     vector_field_inside_tensor = torch.from_numpy(vector_field_inside).float().to(device)
@@ -211,8 +199,8 @@ for series in tqdm(all_series):
     # ── Initial diagnostics ───────────────────────────────────────────────────────
     loop = tqdm(range(Niter))
 
-    count_inside, _ = count_vertices_in_mask(src_mesh, msk_inside, msk_scaled_sitk)
-    count_outside, _ = count_vertices_in_mask(src_mesh, msk_outside, msk_scaled_sitk)
+    count_inside, _ = utils.count_vertices_in_mask(src_mesh, msk_inside, msk_scaled_sitk)
+    count_outside, _ = utils.count_vertices_in_mask(src_mesh, msk_outside, msk_scaled_sitk)
     print(f"Initial vertex count in inside mask:  {count_inside}")
     print(f"Initial vertex count in outside mask: {count_outside}")
 
@@ -262,11 +250,11 @@ for series in tqdm(all_series):
         loss_normal    = mesh_normal_consistency(new_src_mesh)
         loss_laplacian = mesh_laplacian_smoothing(new_src_mesh, method="uniform")
 
-        loss_vectorfield_inside = vector_field_loss_stable_directional(
+        loss_vectorfield_inside = utils.vector_field_loss_stable_directional(
             new_src_mesh, vector_field_inside_tensor, msk_scaled_sitk
         )
 
-        loss_vectorfield_outside = vector_field_loss_stable_directional(
+        loss_vectorfield_outside = utils.vector_field_loss_stable_directional(
             new_src_mesh, vector_field_outside_tensor, msk_scaled_sitk
         )
 
@@ -339,7 +327,7 @@ for series in tqdm(all_series):
     # ---- Post-processing: Taubin smoothing to remove residual oscillations ----
     if taubin_iters > 0:
         print(f"Applying Taubin smoothing ({taubin_iters} iters, λ={taubin_lambda}, μ={taubin_mu})...")
-        final_verts_taubin = taubin_smoothing(
+        final_verts_taubin = utils.taubin_smoothing(
             new_src_mesh, n_iters=taubin_iters,
             lambda_pos=taubin_lambda, lambda_neg=taubin_mu
         )
