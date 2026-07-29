@@ -159,6 +159,10 @@ Reads the CSV, prints the mean ± std before/after (and delta) for each metric t
 the terminal, and saves before/after boxplots as `metrics_summary_plot.png` next
 to the CSV.
 
+> **CGPS reference:** `misc/metrics_CGPS.py` is the equivalent `calculate`/`summarize`
+> metrics script for the private CGPS dataset, reusing the same `saros_utils`
+> helpers. Included for reference only, as CGPS is not publicly available.
+
 ---
 
 ## Additional Information
