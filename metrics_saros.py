@@ -249,6 +249,7 @@ def summarize_metrics(csv_path):
 
     plt.tight_layout()
     plot_path = os.path.join(os.path.dirname(csv_path) or ".", "metrics_summary_plot.png")
+    plt.show()
     plt.savefig(plot_path, dpi=150)
     print(f"\nSaved plot to {plot_path}")
 
